@@ -168,6 +168,10 @@ class MultiClassCCR:
                         observations[classes[j]][idx] for idx in all_indices if idx not in used_indices
                     ]
 
+                for j in range(i + 1, len(classes)):
+                    used_observations[classes[j]] = []
+                    unused_observations[classes[j]] = observations[classes[j]]
+
                 packed_points, packed_labels = MultiClassCCR._pack_observations(used_observations)
 
                 ccr = CCR(energy=self.energy, cleaning_strategy=self.cleaning_strategy, p_norm=self.p_norm,
