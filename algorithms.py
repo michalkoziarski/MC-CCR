@@ -179,10 +179,20 @@ class MultiClassCCR:
 
                 oversampled_points, oversampled_labels = ccr.fit_sample(packed_points, packed_labels)
 
-                observations = {
-                    c: np.concatenate([oversampled_points[oversampled_labels == c], unused_observations[c]])
-                    for c in classes
-                }
+                observations = {}
+
+                for cls in classes:
+                    class_oversampled_points = oversampled_points[oversampled_labels == cls]
+                    class_unused_points = unused_observations[cls]
+
+                    if len(class_oversampled_points) == 0 and len(class_unused_points) == 0:
+                        observations[cls] = np.array([])
+                    elif len(class_oversampled_points) == 0:
+                        observations[cls] = class_unused_points
+                    elif len(class_unused_points) == 0:
+                        observations[cls] = class_oversampled_points
+                    else:
+                        observations[cls] = np.concatenate([class_oversampled_points, class_unused_points])
         else:
             for i in range(1, len(classes)):
                 current_class = classes[i]
@@ -195,7 +205,7 @@ class MultiClassCCR:
 
                 oversampled_points, oversampled_labels = ccr.fit_sample(packed_points, packed_labels)
 
-                observations = {c: oversampled_points[oversampled_labels == c] for c in classes}
+                observations = {cls: oversampled_points[oversampled_labels == cls] for cls in classes}
 
         packed_points, packed_labels = MultiClassCCR._pack_observations(observations)
 
@@ -207,8 +217,9 @@ class MultiClassCCR:
         packed_labels = []
 
         for cls in observations.keys():
-            packed_points.append(observations[cls])
-            packed_labels.append(np.tile([cls], len(observations[cls])))
+            if len(observations[cls]) > 0:
+                packed_points.append(observations[cls])
+                packed_labels.append(np.tile([cls], len(observations[cls])))
 
         packed_points = np.concatenate(packed_points)
         packed_labels = np.concatenate(packed_labels)
