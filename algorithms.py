@@ -118,8 +118,12 @@ class CCR:
             for _ in range(n_synthetic_samples):
                 appended.append(minority_point + sample_inside_sphere(len(minority_point), r, self.p_norm))
 
-        points = np.concatenate([majority_points, minority_points, appended])
-        labels = np.concatenate([majority_labels, minority_labels, np.tile([minority_class], len(appended))])
+        if len(appended) > 0:
+            points = np.concatenate([majority_points, minority_points, appended])
+            labels = np.concatenate([majority_labels, minority_labels, np.tile([minority_class], len(appended))])
+        else:
+            points = np.concatenate([majority_points, minority_points])
+            labels = np.concatenate([majority_labels, minority_labels])
 
         return points, labels
 
