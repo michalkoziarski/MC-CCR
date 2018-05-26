@@ -205,4 +205,4 @@ class MultiClassCCR:
         packed_points = np.concatenate(packed_points)
         packed_labels = np.concatenate(packed_labels)
 
-        return np.concatenate(packed_points), np.concatenate(packed_labels)
+        return packed_points, packed_labels
