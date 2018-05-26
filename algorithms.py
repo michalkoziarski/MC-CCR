@@ -185,13 +185,13 @@ class MultiClassCCR:
                 }
         else:
             for i in range(1, len(classes)):
-                cls = classes[i]
-                n = n_max - len(observations[i])
+                current_class = classes[i]
+                n = n_max - len(observations[current_class])
 
                 packed_points, packed_labels = MultiClassCCR._pack_observations(observations)
 
                 ccr = CCR(energy=self.energy, cleaning_strategy=self.cleaning_strategy, p_norm=self.p_norm,
-                          minority_class=cls, n=n)
+                          minority_class=current_class, n=n)
 
                 oversampled_points, oversampled_labels = ccr.fit_sample(packed_points, packed_labels)
 
