@@ -122,3 +122,87 @@ class CCR:
         labels = np.concatenate([majority_labels, minority_labels, np.tile([minority_class], len(appended))])
 
         return points, labels
+
+
+class MultiClassCCR:
+    def __init__(self, energy, cleaning_strategy='translate', p_norm=1, method='sampling'):
+        assert cleaning_strategy in ['ignore', 'translate', 'remove']
+        assert method in ['sampling', 'complete']
+
+        self.energy = energy
+        self.cleaning_strategy = cleaning_strategy
+        self.p_norm = p_norm
+        self.method = method
+
+    def fit_sample(self, X, y):
+        classes = np.unique(y)
+        sizes = np.array([sum(y == c) for c in classes])
+        indices = np.argsort(sizes)[::-1]
+        classes = classes[indices]
+        observations = {c: X[y == c] for c in classes}
+        n_max = max(sizes)
+
+        if self.method == 'sampling':
+            for i in range(1, len(classes)):
+                current_class = classes[i]
+                n = n_max - len(observations[current_class])
+
+                used_observations = {}
+                unused_observations = {}
+
+                used_observations[current_class] = observations[current_class]
+                unused_observations[current_class] = []
+
+                for j in range(0, i):
+                    all_indices = list(range(len(observations[classes[j]])))
+                    used_indices = np.random.choice(all_indices, int(n_max / i))
+
+                    used_observations[classes[j]] = [
+                        observations[classes[j]][idx] for idx in all_indices if idx in used_indices
+                    ]
+                    unused_observations[classes[j]] = [
+                        observations[classes[j]][idx] for idx in all_indices if idx not in used_indices
+                    ]
+
+                packed_points, packed_labels = MultiClassCCR._pack_observations(used_observations)
+
+                ccr = CCR(energy=self.energy, cleaning_strategy=self.cleaning_strategy, p_norm=self.p_norm,
+                          minority_class=current_class, n=n)
+
+                oversampled_points, oversampled_labels = ccr.fit_sample(packed_points, packed_labels)
+
+                observations = {
+                    c: np.concatenate([oversampled_points[oversampled_labels == c], unused_observations[c]])
+                    for c in classes
+                }
+        else:
+            for i in range(1, len(classes)):
+                cls = classes[i]
+                n = n_max - len(observations[i])
+
+                packed_points, packed_labels = MultiClassCCR._pack_observations(observations)
+
+                ccr = CCR(energy=self.energy, cleaning_strategy=self.cleaning_strategy, p_norm=self.p_norm,
+                          minority_class=cls, n=n)
+
+                oversampled_points, oversampled_labels = ccr.fit_sample(packed_points, packed_labels)
+
+                observations = {c: oversampled_points[oversampled_labels == c] for c in classes}
+
+        packed_points, packed_labels = MultiClassCCR._pack_observations(observations)
+
+        return packed_points, packed_labels
+
+    @staticmethod
+    def _pack_observations(observations):
+        packed_points = []
+        packed_labels = []
+
+        for cls in observations.keys():
+            packed_points.append(observations[cls])
+            packed_labels.append(np.tile([cls], len(observations[cls])))
+
+        packed_points = np.concatenate(packed_points)
+        packed_labels = np.concatenate(packed_labels)
+
+        return np.concatenate(packed_points), np.concatenate(packed_labels)
