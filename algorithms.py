@@ -172,12 +172,12 @@ class MultiClassCCR:
                     used_observations[classes[j]] = []
                     unused_observations[classes[j]] = observations[classes[j]]
 
-                packed_points, packed_labels = MultiClassCCR._pack_observations(used_observations)
+                unpacked_points, unpacked_labels = MultiClassCCR._unpack_observations(used_observations)
 
                 ccr = CCR(energy=self.energy, cleaning_strategy=self.cleaning_strategy, p_norm=self.p_norm,
                           minority_class=current_class, n=n)
 
-                oversampled_points, oversampled_labels = ccr.fit_sample(packed_points, packed_labels)
+                oversampled_points, oversampled_labels = ccr.fit_sample(unpacked_points, unpacked_labels)
 
                 observations = {}
 
@@ -198,30 +198,30 @@ class MultiClassCCR:
                 current_class = classes[i]
                 n = n_max - len(observations[current_class])
 
-                packed_points, packed_labels = MultiClassCCR._pack_observations(observations)
+                unpacked_points, unpacked_labels = MultiClassCCR._unpack_observations(observations)
 
                 ccr = CCR(energy=self.energy, cleaning_strategy=self.cleaning_strategy, p_norm=self.p_norm,
                           minority_class=current_class, n=n)
 
-                oversampled_points, oversampled_labels = ccr.fit_sample(packed_points, packed_labels)
+                oversampled_points, oversampled_labels = ccr.fit_sample(unpacked_points, unpacked_labels)
 
                 observations = {cls: oversampled_points[oversampled_labels == cls] for cls in classes}
 
-        packed_points, packed_labels = MultiClassCCR._pack_observations(observations)
+        unpacked_points, unpacked_labels = MultiClassCCR._unpack_observations(observations)
 
-        return packed_points, packed_labels
+        return unpacked_points, unpacked_labels
 
     @staticmethod
-    def _pack_observations(observations):
-        packed_points = []
-        packed_labels = []
+    def _unpack_observations(observations):
+        unpacked_points = []
+        unpacked_labels = []
 
         for cls in observations.keys():
             if len(observations[cls]) > 0:
-                packed_points.append(observations[cls])
-                packed_labels.append(np.tile([cls], len(observations[cls])))
+                unpacked_points.append(observations[cls])
+                unpacked_labels.append(np.tile([cls], len(observations[cls])))
 
-        packed_points = np.concatenate(packed_points)
-        packed_labels = np.concatenate(packed_labels)
+        unpacked_points = np.concatenate(unpacked_points)
+        unpacked_labels = np.concatenate(unpacked_labels)
 
-        return packed_points, packed_labels
+        return unpacked_points, unpacked_labels
