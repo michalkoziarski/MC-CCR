@@ -30,7 +30,7 @@ for dataset in datasets.names():
         for fold in [1, 2]:
             logging.info('Processing fold %dx%d of dataset "%s"...' % (partition, fold, dataset))
 
-            output_path = Path(args.root_output_path) / dataset
+            output_path = Path(args.output_path) / dataset
             output_path.mkdir(parents=True, exist_ok=True)
 
             (X_train, y_train), (X_test, y_test) = datasets.load(dataset, partition, fold)
