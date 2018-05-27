@@ -9,7 +9,7 @@ from collections import Counter
 from pathlib import Path
 
 
-DEFAULT_ROOT_OUTPUT_PATH = Path(__file__).parent / 'results'
+DEFAULT_ROOT_OUTPUT_PATH = Path(__file__).parent / 'resampled_data'
 DEFAULT_DATA_PATH = Path(__file__).parent / 'data'
 
 logging.basicConfig(level=logging.INFO)
