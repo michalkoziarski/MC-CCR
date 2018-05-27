@@ -154,12 +154,9 @@ class MultiClassCCR:
                 used_observations = {}
                 unused_observations = {}
 
-                used_observations[current_class] = observations[current_class]
-                unused_observations[current_class] = []
-
                 for j in range(0, i):
                     all_indices = list(range(len(observations[classes[j]])))
-                    used_indices = np.random.choice(all_indices, int(n_max / i))
+                    used_indices = np.random.choice(all_indices, int(n_max / i), replace=False)
 
                     used_observations[classes[j]] = [
                         observations[classes[j]][idx] for idx in all_indices if idx in used_indices
@@ -167,6 +164,9 @@ class MultiClassCCR:
                     unused_observations[classes[j]] = [
                         observations[classes[j]][idx] for idx in all_indices if idx not in used_indices
                     ]
+
+                used_observations[current_class] = observations[current_class]
+                unused_observations[current_class] = []
 
                 for j in range(i + 1, len(classes)):
                     used_observations[classes[j]] = []
