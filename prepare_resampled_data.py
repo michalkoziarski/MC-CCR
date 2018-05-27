@@ -5,6 +5,7 @@ import logging
 import numpy as np
 import pandas as pd
 
+from collections import Counter
 from pathlib import Path
 
 
@@ -25,11 +26,9 @@ parser.add_argument('-method', choices=['sampling', 'complete'], default='sampli
 args = parser.parse_args()
 
 for dataset in datasets.names():
-    logging.info('Processing dataset "%s"...' % dataset)
-
     for partition in [1, 2, 3, 4, 5]:
         for fold in [1, 2]:
-            logging.info('Processing fold %dx%d...' % (partition, fold))
+            logging.info('Processing fold %dx%d of dataset "%s"...' % (partition, fold, dataset))
 
             output_path = Path(args.root_output_path) / dataset
             output_path.mkdir(parents=True, exist_ok=True)
@@ -41,9 +40,13 @@ for dataset in datasets.names():
             ).columns
 
             if args.mode == 'OVA':
+                logging.info('Training distribution before resampling: %s.' % Counter(y_train))
+
                 X_train, y_train = algorithms.MultiClassCCR(
                     energy=args.energy, cleaning_strategy=args.cleaning_strategy, p_norm=args.p_norm, method=args.method
                 ).fit_sample(X_train, y_train)
+
+                logging.info('Training distribution after resampling: %s.' % Counter(y_train))
 
                 csv_path = output_path / ('%s.%d.%d.train.oversampled.csv' % (dataset, partition, fold))
 
@@ -53,9 +56,13 @@ for dataset in datasets.names():
 
                 for i in range(len(classes)):
                     for j in range(i + 1, len(classes)):
+                        logging.info('Resampling class %s vs. class %s.' % (classes[i], classes[j]))
+
                         indices = ((y_train == classes[i]) | (y_train == classes[j]))
 
                         X, y = X_train[indices].copy(), y_train[indices].copy()
+
+                        logging.info('Training distribution before resampling: %s.' % Counter(y))
 
                         class_distribution = {cls: len(y[y == cls]) for cls in [classes[i], classes[j]]}
                         minority_class = min(class_distribution, key=class_distribution.get)
@@ -63,6 +70,8 @@ for dataset in datasets.names():
                         X, y = algorithms.CCR(
                             energy=args.energy, cleaning_strategy=args.cleaning_strategy, p_norm=args.p_norm
                         ).fit_sample(X, y)
+
+                        logging.info('Training distribution after resampling: %s.' % Counter(y))
 
                         csv_path = output_path / ('%s.%d.%d.train.oversampled.%dv%d.csv' %
                                                   (dataset, partition, fold, classes[i], classes[j]))
