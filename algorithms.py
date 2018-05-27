@@ -156,7 +156,7 @@ class MultiClassCCR:
 
                 for j in range(0, i):
                     all_indices = list(range(len(observations[classes[j]])))
-                    used_indices = np.random.choice(all_indices, int(n_max / i), replace=False)
+                    used_indices = np.random.choice(all_indices, int(n_max / i))
 
                     used_observations[classes[j]] = [
                         observations[classes[j]][idx] for idx in all_indices if idx in used_indices
