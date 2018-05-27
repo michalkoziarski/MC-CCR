@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 parser = argparse.ArgumentParser()
 
 parser.add_argument('-mode', choices=['OVA', 'OVO'], default='OVA')
-parser.add_argument('-root_output_path', type=str, default=DEFAULT_ROOT_OUTPUT_PATH)
+parser.add_argument('-output_path', type=str, default=DEFAULT_ROOT_OUTPUT_PATH)
 parser.add_argument('-energy', type=float, default=0.25)
 parser.add_argument('-cleaning_strategy', type=str, choices=['ignore', 'translate', 'remove'], default='translate')
 parser.add_argument('-p_norm', type=float, default=1.0)
