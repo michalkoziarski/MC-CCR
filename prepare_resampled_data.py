@@ -20,6 +20,7 @@ parser.add_argument('-mode', choices=['OVA', 'OVO'], default='OVA')
 parser.add_argument('-output_path', type=str, default=DEFAULT_ROOT_OUTPUT_PATH)
 parser.add_argument('-energy', type=float, default=0.25)
 parser.add_argument('-cleaning_strategy', type=str, choices=['ignore', 'translate', 'remove'], default='translate')
+parser.add_argument('-selection_strategy', type=str, choices=['proportional', 'random'], default='proportional')
 parser.add_argument('-p_norm', type=float, default=1.0)
 parser.add_argument('-method', choices=['sampling', 'complete'], default='sampling')
 
@@ -43,7 +44,8 @@ for dataset in datasets.names():
                 logging.info('Training distribution before resampling: %s.' % Counter(y_train))
 
                 X_train, y_train = algorithms.MultiClassCCR(
-                    energy=args.energy, cleaning_strategy=args.cleaning_strategy, p_norm=args.p_norm, method=args.method
+                    energy=args.energy, cleaning_strategy=args.cleaning_strategy,
+                    selection_strategy=args.selection_strategy, p_norm=args.p_norm, method=args.method
                 ).fit_sample(X_train, y_train)
 
                 logging.info('Training distribution after resampling: %s.' % Counter(y_train))
@@ -68,7 +70,8 @@ for dataset in datasets.names():
                         minority_class = min(class_distribution, key=class_distribution.get)
 
                         X, y = algorithms.CCR(
-                            energy=args.energy, cleaning_strategy=args.cleaning_strategy, p_norm=args.p_norm
+                            energy=args.energy, cleaning_strategy=args.cleaning_strategy,
+                            selection_strategy=args.selection_strategy, p_norm=args.p_norm
                         ).fit_sample(X, y)
 
                         logging.info('Training distribution after resampling: %s.' % Counter(y))

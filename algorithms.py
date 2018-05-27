@@ -13,11 +13,14 @@ def sample_inside_sphere(dimensionality, radius, p_norm=1):
 
 
 class CCR:
-    def __init__(self, energy, cleaning_strategy='translate', p_norm=1, minority_class=None, n=None):
+    def __init__(self, energy, cleaning_strategy='translate', selection_strategy='proportional', p_norm=1,
+                 minority_class=None, n=None):
         assert cleaning_strategy in ['ignore', 'translate', 'remove']
+        assert selection_strategy in ['proportional', 'random']
 
         self.energy = energy
         self.cleaning_strategy = cleaning_strategy
+        self.selection_strategy = selection_strategy
         self.p_norm = p_norm
         self.minority_class = minority_class
         self.n = n
@@ -110,12 +113,19 @@ class CCR:
 
         appended = []
 
-        for i in range(len(minority_points)):
-            minority_point = minority_points[i]
-            n_synthetic_samples = int(np.round(1.0 / (radii[i] * np.sum(1.0 / radii)) * n))
-            r = radii[i]
+        if self.selection_strategy == 'proportional':
+            for i in range(len(minority_points)):
+                minority_point = minority_points[i]
+                n_synthetic_samples = int(np.round(1.0 / (radii[i] * np.sum(1.0 / radii)) * n))
+                r = radii[i]
 
-            for _ in range(n_synthetic_samples):
+                for _ in range(n_synthetic_samples):
+                    appended.append(minority_point + sample_inside_sphere(len(minority_point), r, self.p_norm))
+        elif self.selection_strategy == 'random':
+            for i in np.random.choice(range(len(minority_points)), n):
+                minority_point = minority_points[i]
+                r = radii[i]
+
                 appended.append(minority_point + sample_inside_sphere(len(minority_point), r, self.p_norm))
 
         if len(appended) > 0:
@@ -129,12 +139,15 @@ class CCR:
 
 
 class MultiClassCCR:
-    def __init__(self, energy, cleaning_strategy='translate', p_norm=1, method='sampling'):
+    def __init__(self, energy, cleaning_strategy='translate', selection_strategy='proportional', p_norm=1,
+                 method='sampling'):
         assert cleaning_strategy in ['ignore', 'translate', 'remove']
+        assert selection_strategy in ['proportional', 'random']
         assert method in ['sampling', 'complete']
 
         self.energy = energy
         self.cleaning_strategy = cleaning_strategy
+        self.selection_strategy = selection_strategy
         self.p_norm = p_norm
         self.method = method
 
@@ -174,7 +187,8 @@ class MultiClassCCR:
 
                 unpacked_points, unpacked_labels = MultiClassCCR._unpack_observations(used_observations)
 
-                ccr = CCR(energy=self.energy, cleaning_strategy=self.cleaning_strategy, p_norm=self.p_norm,
+                ccr = CCR(energy=self.energy, cleaning_strategy=self.cleaning_strategy,
+                          selection_strategy=self.selection_strategy, p_norm=self.p_norm,
                           minority_class=current_class, n=n)
 
                 oversampled_points, oversampled_labels = ccr.fit_sample(unpacked_points, unpacked_labels)
@@ -200,7 +214,8 @@ class MultiClassCCR:
 
                 unpacked_points, unpacked_labels = MultiClassCCR._unpack_observations(observations)
 
-                ccr = CCR(energy=self.energy, cleaning_strategy=self.cleaning_strategy, p_norm=self.p_norm,
+                ccr = CCR(energy=self.energy, cleaning_strategy=self.cleaning_strategy,
+                          selection_strategy=self.selection_strategy, p_norm=self.p_norm,
                           minority_class=current_class, n=n)
 
                 oversampled_points, oversampled_labels = ccr.fit_sample(unpacked_points, unpacked_labels)
