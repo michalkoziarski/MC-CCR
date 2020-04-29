@@ -1,5 +1,7 @@
 import numpy as np
 
+from scipy.spatial import distance_matrix
+
 
 def distance(x, y, p_norm=1):
     return np.sum(np.abs(x - y) ** p_norm) ** (1 / p_norm)
@@ -43,11 +45,7 @@ class CCR:
         else:
             n = self.n
 
-        distances = np.zeros((len(minority_points), len(majority_points)))
-
-        for i in range(len(minority_points)):
-            for j in range(len(majority_points)):
-                distances[i][j] = distance(minority_points[i], majority_points[j], self.p_norm)
+        distances = distance_matrix(minority_points, majority_points, self.p_norm)
 
         radii = np.zeros(len(minority_points))
 
